@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-data-toolkit"
+version = "0.2.0"
+description = "Shared Azure Parquet and Delta Lake storage with coordinated writes"
+requires-python = ">=3.10"
+dependencies = ["azure-storage-blob>=12.20,<13", "azure-identity>=1.17,<2", "deltalake>=0.25,<2", "pandas>=2.2,<3", "pyarrow>=17,<24"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "build>=1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

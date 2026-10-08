@@ -1,0 +1,90 @@
+
+# ==========================================
+# Python compiled files
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ==========================================
+# Virtual environments
+# ==========================================
+.venv/
+venv/
+env/
+ENV/
+
+# ==========================================
+# Python package build artifacts
+# ==========================================
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+*.whl
+
+# ==========================================
+# Unit tests and coverage
+# ==========================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+.hypothesis/
+
+# ==========================================
+# Local configuration and credentials
+# ==========================================
+.env
+.env.*
+!.env.example
+!.env.test.example
+local.settings.json
+secrets/
+*.pem
+*.key
+*.pfx
+
+# ==========================================
+# IDE and editor files
+# ==========================================
+.vscode/
+.idea/
+*.code-workspace
+
+# ==========================================
+# Operating system files
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Temporary files and logs
+# ==========================================
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+tmp/
+temp/
+
+# ==========================================
+# Local test storage / data
+# ==========================================
+_adl_test_runs/
+test-output/
+test-results/
+*.parquet
+*.delta
+
+# ==========================================
+# Jupyter notebooks
+# ==========================================
+.ipynb_checkpoints/
