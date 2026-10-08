@@ -1,0 +1,33 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.11'
+
+  - script: |
+      python -m pip install --upgrade pip
+      python -m pip install -e ".[test]"
+      python -m pytest -v -m "not azure"
+    displayName: Install and run unit tests
+
+  - script: |
+      python -m build
+    displayName: Build Python wheel
+
+  - publish: dist
+    artifact: python-wheel
+    displayName: Publish wheel
