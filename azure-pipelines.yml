@@ -1,3 +1,4 @@
+
 trigger:
   branches:
     include:
@@ -8,26 +9,20 @@ pr:
     include:
       - main
 
-pool:
-  vmImage: ubuntu-latest
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: Shared-Project/Pipeline-Templates
+      ref: refs/heads/main
 
-steps:
-  - checkout: self
-
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.11'
-
-  - script: |
-      python -m pip install --upgrade pip
-      python -m pip install -e ".[test]"
-      python -m pytest -v -m "not azure"
-    displayName: Install and run unit tests
-
-  - script: |
-      python -m build
-    displayName: Build Python wheel
-
-  - publish: dist
-    artifact: python-wheel
-    displayName: Publish wheel
+stages:
+  - template: build/python-library.yml@templates
+    parameters:
+      appName: 'azure-data-toolkit'
+      pythonVersion: '3.11'
+      artifactVariableGroup: 'GitHubPAT'
+      artifactRepoOwner: 'AllakaNarasimha'
+      artifactRepoName: 'data-fetcher-artifacts'
+      artifactRetentionCount: 5
+      azureArtifactFeed: 'Enterprise-Releases'
