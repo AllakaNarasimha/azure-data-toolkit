@@ -22,10 +22,20 @@ class BlobLock:
 
     @contextmanager
     def acquire(self):
-        try:
-            self.blob.upload_blob(b"", overwrite=False)
-        except ResourceExistsError:
-            pass
+        # Do not issue a write against an existing lock blob: Azure rejects
+        # even create-only uploads without a lease ID while it is leased.
+        if not self.blob.exists():
+            try:
+                self.blob.upload_blob(b"", overwrite=False)
+            except ResourceExistsError:
+                pass  # Another writer created it before our upload.
+            except HttpResponseError as exc:
+                # Another writer may create AND lease it after exists().
+                # Only this specific, verified race permits continuing.
+                code = getattr(exc, "error_code", None)
+                code = getattr(code, "value", code)
+                if code != "LeaseIdMissing" or not self.blob.exists():
+                    raise
         lease = BlobLeaseClient(self.blob)
         deadline = time.monotonic() + self.wait_seconds
         while True:
@@ -58,3 +68,4 @@ class BlobLock:
                 lease.release()
             except HttpResponseError:
                 lost.set()
+
