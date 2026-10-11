@@ -98,7 +98,7 @@ class DataLake:
                 if missing_ok:
                     return pd.DataFrame()
                 raise
-            except ResourceModifiedError:
+            except (ResourceModifiedError, ServiceRequestError, ServiceResponseError):
                 if attempt >= getattr(self, "read_retries", 3):
                     raise
                 logger.info("data_lake read_conflict container=%s path=%s attempt=%s", self.container_name, full_path, attempt + 1)

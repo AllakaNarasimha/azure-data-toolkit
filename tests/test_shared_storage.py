@@ -119,3 +119,27 @@ def test_require_append_keys(local_delta):
 def test_noncanonical_paths(local_delta, path):
     with pytest.raises(ValueError):
         local_delta._path(path)
+
+
+@pytest.mark.parametrize('exception_name', ['ServiceRequestError', 'ServiceResponseError'])
+def test_interrupted_read_restarts_properties_and_download(exception_name):
+    import io
+    import pyarrow.parquet as pq
+    from unittest.mock import MagicMock
+    from azure.core import exceptions
+    lake = object.__new__(DataLake)
+    lake.read_retries = 1
+    lake.read_retry_delay = 0
+    lake.container_name = 'test'
+    lake._container = MagicMock()
+    blob = lake._container.get_blob_client.return_value
+    blob.get_blob_properties.side_effect = [SimpleNamespace(etag='old'), SimpleNamespace(etag='new')]
+    output = io.BytesIO()
+    pq.write_table(pa.table({'id': [2]}), output)
+    first = MagicMock()
+    first.readall.side_effect = getattr(exceptions, exception_name)('interrupted')
+    second = MagicMock()
+    second.readall.return_value = output.getvalue()
+    blob.download_blob.side_effect = [first, second]
+    assert lake._read_parquet_blob('x', missing_ok=False).id.tolist() == [2]
+    assert [call.kwargs['etag'] for call in blob.download_blob.call_args_list] == ['old', 'new']

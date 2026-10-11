@@ -26,6 +26,33 @@ def test_existing_leased_blob_goes_to_acquire_not_upload(clients):
  with pytest.raises(LockUnavailable):
   with lock(blob).acquire():pass
  blob.upload_blob.assert_not_called()
+
+
+def test_renewal_failure_marks_lease_lost_and_blocks_commit(clients, monkeypatch):
+ from threading import Event
+ from azure_data_toolkit import DataLake, LockLost
+ blob, lease = clients
+ blob.exists.return_value = True
+ lease.renew.side_effect = error('LeaseLost', 412)
+ class ImmediateRenewal(Event):
+  def __init__(self):
+   super().__init__()
+   self.first_wait = True
+  def wait(self, timeout=None):
+   if self.first_wait and timeout is not None:
+    self.first_wait = False
+    return False
+   return super().wait(timeout)
+ events = iter([ImmediateRenewal(), Event()])
+ monkeypatch.setattr('azure_data_toolkit.locking.threading.Event', lambda: next(events, None) or Event())
+ action = MagicMock()
+ with lock(blob).acquire() as lost:
+  assert lost.wait(timeout=2), 'renewal worker did not report lease loss'
+  with pytest.raises(LockLost):
+   DataLake._commit(action, lost, 'x')
+ action.assert_not_called()
+ lease.renew.assert_called_once()
+ lease.release.assert_called_once()
  lease.acquire.assert_called_once()
 
 def test_create_and_lease_race_then_acquire(clients):
